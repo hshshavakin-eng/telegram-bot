@@ -1,7 +1,9 @@
-from telegram import *
-from telegram.ext import *
 
-TOKEN = "8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE"
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+import os
+
+TOKEN = os.getenv("8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE")  # مهم جداً
 ADMIN_ID = 1452361376
 
 orders = {}
@@ -14,7 +16,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("👑 VIP", callback_data="vip")],
         [InlineKeyboardButton("📞 الدعم الفني", callback_data="support")]
     ]
-    await update.message.reply_text("👑 مرحباً بك في متجر Shop Crowns", reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(
+        "👑 مرحباً بك في متجر Shop Crowns",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -28,17 +33,26 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("تغيير الملامح", callback_data="free_face")],
             [InlineKeyboardButton("جمع معلومات", callback_data="free_info")]
         ]
-        await query.message.reply_text("اختر الخدمة المجانية:", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.message.reply_text(
+            "اختر الخدمة المجانية:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
     elif "free_" in query.data:
         orders[user_id] = {"type": query.data}
         await query.message.reply_text("📌 ارسل اليوزر / ID الخاص بك:")
 
     elif query.data == "crowns":
-        await query.message.reply_text("اختر الكمية:\n20 كراون = 27 جنيه\n50 كراون = 67.5 جنيه\n100 كراون = 135 جنيه")
+        await query.message.reply_text(
+            "اختر الكمية:\n20 كراون = 27 جنيه\n50 كراون = 67.5 جنيه\n100 كراون = 135 جنيه"
+        )
 
     elif query.data == "support":
-        await query.message.reply_text("📞 تم ارسال طلبك للدعم\n⏳ انتظر، سيتم الرد عليك لاحقاً")
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"📞 طلب دعم من {query.from_user.first_name} | {query.from_user.id}"
+        )
+        await query.message.reply_text("✅ تم إرسال طلبك للدعم")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
@@ -63,6 +77,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⏳ جاري تنفيذ طلبك...")
         await update.message.reply_text("✅ تم استلام الطلب")
 
+        del orders[user_id]  # مهم
+
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
 
@@ -78,7 +94,7 @@ app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(buttons))
-app.add_handler(MessageHandler(filters.TEXT, handle_message))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
 app.run_polling()
