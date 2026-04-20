@@ -1,7 +1,7 @@
 from telegram import *
 from telegram.ext import *
 
-TOKEN = "PUT_TOKEN"
+TOKEN = "8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE"
 ADMIN_ID = 1452361376
 
 orders = {}
