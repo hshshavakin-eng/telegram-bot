@@ -1,39 +1,84 @@
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import *
+from telegram.ext import *
 
-TOKEN = "8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE"
+TOKEN = "PUT_TOKEN"
 ADMIN_ID = 1452361376
 
-main_menu = ReplyKeyboardMarkup([
-    ["📦 طلبات مجانية", "💰 طلبات مدفوعة"],
-    ["💬 تواصل مع الدعم"]
-], resize_keyboard=True)
+orders = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👑 اهلا بيك في شوب كراونز", reply_markup=main_menu)
+    keyboard = [
+        [InlineKeyboardButton("📦 طلبات مجانية", callback_data="free")],
+        [InlineKeyboardButton("💸 شراء كراونز", callback_data="crowns")],
+        [InlineKeyboardButton("👍 لايكات ومشاهدات", callback_data="likes")],
+        [InlineKeyboardButton("👑 VIP", callback_data="vip")],
+        [InlineKeyboardButton("📞 الدعم الفني", callback_data="support")]
+    ]
+    await update.message.reply_text("👑 مرحباً بك في متجر Shop Crowns", reply_markup=InlineKeyboardMarkup(keyboard))
 
-async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+
+    if query.data == "free":
+        keyboard = [
+            [InlineKeyboardButton("تغيير الاسم", callback_data="free_name")],
+            [InlineKeyboardButton("تغيير الصورة", callback_data="free_pic")],
+            [InlineKeyboardButton("تغيير الملامح", callback_data="free_face")],
+            [InlineKeyboardButton("جمع معلومات", callback_data="free_info")]
+        ]
+        await query.message.reply_text("اختر الخدمة المجانية:", reply_markup=InlineKeyboardMarkup(keyboard))
+
+    elif "free_" in query.data:
+        orders[user_id] = {"type": query.data}
+        await query.message.reply_text("📌 ارسل اليوزر / ID الخاص بك:")
+
+    elif query.data == "crowns":
+        await query.message.reply_text("اختر الكمية:\n20 كراون = 27 جنيه\n50 كراون = 67.5 جنيه\n100 كراون = 135 جنيه")
+
+    elif query.data == "support":
+        await query.message.reply_text("📞 تم ارسال طلبك للدعم\n⏳ انتظر، سيتم الرد عليك لاحقاً")
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user
+    user_id = user.id
     text = update.message.text
 
-    if text == "📦 طلبات مجانية":
-        await update.message.reply_text("اكتب طلبك المجاني")
+    if user_id in orders:
+        orders[user_id]["data"] = text
 
-    elif text == "💰 طلبات مدفوعة":
-        await update.message.reply_text("اكتب طلبك المدفوع")
-
-    elif text == "💬 تواصل مع الدعم":
-        await update.message.reply_text("اكتب رسالتك")
-
-    else:
         await context.bot.send_message(
             chat_id=ADMIN_ID,
-            text=f"📥 طلب جديد:\n{text}"
+            text=f"""
+📥 طلب جديد
+
+👤 الاسم: {user.first_name}
+🆔 الايدي: {user.id}
+📦 الخدمة: {orders[user_id]['type']}
+📌 البيانات: {text}
+"""
         )
-        await update.message.reply_text("تم استلام طلبك ✅")
+
+        await update.message.reply_text("⏳ جاري تنفيذ طلبك...")
+        await update.message.reply_text("✅ تم استلام الطلب")
+
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user
+
+    await context.bot.send_photo(
+        chat_id=ADMIN_ID,
+        photo=update.message.photo[-1].file_id,
+        caption=f"📸 صورة دفع من {user.first_name} | {user.id}"
+    )
+
+    await update.message.reply_text("✅ تم استلام صورة الدفع")
 
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT, handle))
+app.add_handler(CallbackQueryHandler(buttons))
+app.add_handler(MessageHandler(filters.TEXT, handle_message))
+app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
 app.run_polling()
