@@ -3,7 +3,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 import os
 
-TOKEN = os.getenv("8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE")  # مهم جداً
+import os
+TOKEN = os.getenv("8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE")
 ADMIN_ID = 1452361376
 
 orders = {}
