@@ -1,5 +1,6 @@
-
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import CallbackQueryHandler
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 import os
 
@@ -7,15 +8,22 @@ import os
 TOKEN = ("8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE")
 ADMIN_ID = 1452361376
 
-orders = {}
+orders = []
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("📦 طلبات مجانية", callback_data="free")],
-        [InlineKeyboardButton("💸 شراء كراونز", callback_data="crowns")],
+        [from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+def main_menu():
+    keyboard = [
+        [InlineKeyboardButton("🆓 طلبات مجانية", callback_data="free")],
+        [InlineKeyboardButton("💸 شراء العملات", callback_data="buy")],
         [InlineKeyboardButton("👍 لايكات ومشاهدات", callback_data="likes")],
         [InlineKeyboardButton("👑 VIP", callback_data="vip")],
-        [InlineKeyboardButton("📞 الدعم الفني", callback_data="support")]
+        [InlineKeyboardButton("📞 الدعم الفني", callback_data="support")],
+        [InlineKeyboardButton("🌍 تغيير اللغة", callback_data="lang")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
     ]
     await update.message.reply_text(
         "👑 مرحباً بك في متجر Shop Crowns",
@@ -41,7 +49,7 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif "free_" in query.data:
         orders[user_id] = {"type": query.data}
-        await query.message.reply_text("📌 ارسل اليوزر / ID الخاص بك:")
+        await query.message.reply_text("📌 ارسل البريد الخاص بك / ارسل الرقم المرور الخاص بك:")
 
     elif query.data == "crowns":
         await query.message.reply_text(
@@ -91,8 +99,9 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("✅ تم استلام صورة الدفع")
 
-app = ApplicationBuilder().token(TOKEN).build()
 
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CallbackQueryHandler(handle_buttons))
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(buttons))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
