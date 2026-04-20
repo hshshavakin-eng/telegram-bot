@@ -4,7 +4,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 import os
 
 import os
-TOKEN = os.getenv("8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE")
+TOKEN = ("8744398692:AAHz24SVquGOOoM8VLkMFhJuifX08NQUPVE")
 ADMIN_ID = 1452361376
 
 orders = {}
